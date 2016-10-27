@@ -1,0 +1,34 @@
+{
+  "name": "nd-binary-indexed-tree",
+  "version": "0.0.0",
+  "description": "N-dimensional Binary Indexed Tree",
+  "author": "Adam Hull <adam@hmlad.com>",
+  "keywords": [
+    "fenwick",
+    "tree",
+    "prefix",
+    "sum",
+    "binary indexed",
+    "2d",
+    "3d"
+  ],
+  "main": "nd_binary_indexed_tree",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/hurrymaplelad/nd-binary-indexed-tree.git"
+  },
+  "homepage": "https://github.com/hurrymaplelad/nd-binary-indexed-tree",
+  "bugs": "https://github.com/hurrymaplelad/nd-binary-indexed-tree/issues",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "jshint": "*",
+    "mocha": "^3.x.x"
+  },
+  "scripts": {
+    "test": "jshint *.js && mocha"
+  },
+  "jshintConfig": {
+    "esversion": 6
+  }
+}
