@@ -16,6 +16,14 @@ $ npm install nd-binary-indexed-tree
 ### Examples
 ```js
 const BITree = require('nd-binary-indexed-tree');
-let biTree = new BITree([3,3]);
+let biTree = new BITree({initialValues: [
+  [3,  1, 5  ],
+  [0, -1, 9.5],
+  [4,  4, 90 ]
+]});
+biTree.sumPrefix([2, 1]); // 11
+biTree.adjust([1, 1], +2);
+biTree.sumPrefix([2, 1]); // 13
+;
 ```
 See [tests](test/) for more examples.

@@ -34,13 +34,27 @@ function shortenBitPath(x) {
  * familiar 0-indexed API.
  */
 class BITree {
-  constructor (sizes, dimension=0) {
-    let size = sizes[dimension];
-    // next larger power of 2
+  constructor (options, dimension=0) {
+    let {dimensions, initialValues} = options;
+
+    if(initialValues) {
+      dimensions = [];
+      for(let dim = initialValues; dim && dim.length; dim = dim[0]) {
+        dimensions.push(dim.length);
+      }
+    }
+
+    if(!dimensions || !dimensions.length) {
+      throw new Error('provide either dimensions or initial values');
+    }
+
+    // expected number of entries at this dimension
+    let size = dimensions[dimension];
+    // next larger power of 2 (we need a complete binary tree)
     let k = Math.ceil(Math.log(size + 1) / Math.log(2));
     // index into vectors
     this.dimension = dimension;
-    this.isLastDimension = (dimension === sizes.length - 1);
+    this.isLastDimension = (dimension === dimensions.length - 1);
     // exclusive
     this.indexCap = (1 << k) - 1;
     // index of the root of the tree
@@ -51,31 +65,61 @@ class BITree {
 
     for(let i=0; i<this.indexCap; i++) {
       this.cumulative[i] = (this.isLastDimension ? 0 :
-        new BITree(sizes, dimension+1)
+        new BITree({dimensions}, dimension+1)
      );
+    }
+
+    if(initialValues) {
+      this._initialize(initialValues);
+    }
+  }
+
+  _initialize(values) {
+    let path = [];
+    for(let v of this._walk(values, path)) {
+      this.adjust(path, v);
+    }
+  }
+
+  /*
+   * Returns a generator that iterates the values of
+   * an N-dimensional nested array strucuture.
+   * If the provided, the argument path array will contain the
+   * path the to the current value after each iteration.
+   */
+  *_walk(values, path=[]) {
+    for(let i=0; i<values.length; i++) {
+      path.push(i);
+      let v = values[i];
+      if(v.length) {
+        yield * this._walk(v, path);
+      } else {
+        yield v;
+      }
+      path.pop();
     }
   }
 
   /**
    * Returns the cumulative total of values through index i.
    */
-  get(vector) {
+  sumPrefix(vector) {
     let i = vector[this.dimension];
     let total = 0;
     while(i+1) {
       let partial = (this.isLastDimension ?
         this.cumulative[i] :
         // recurse into the next dimension
-        this.cumulative[i].get(vector)
+        this.cumulative[i].sumPrefix(vector)
       );
       total += partial;
-      // (i + 1) - lsbMask(i + 1) - 1
+      // Simplified from: (i + 1) - lsbMask(i + 1) - 1
       i -= lsbMask(i+1);
     }
     return total;
   }
 
-  update(vector, diff) {
+  adjust(vector, diff) {
     let i = vector[this.dimension];
     let shouldAccumulate = true;
     // Propagate up the tree, applying the diff
@@ -86,7 +130,7 @@ class BITree {
       } else if(this.isLastDimension) {
           this.cumulative[i] += diff;
       } else {
-          this.cumulative[i].update(vector, diff);
+          this.cumulative[i].adjust(vector, diff);
       }
       shouldAccumulate = !isRightChild(i+1);
       i = shortenBitPath(i+1) - 1;
